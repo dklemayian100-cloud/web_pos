@@ -99,6 +99,7 @@ model Product {
   name        String
   description String?
   price       Decimal  @db.Decimal(12, 2)
+  costPrice   Decimal? @db.Decimal(12, 2)
   isActive    Boolean  @default(true)
   categoryId  String?  @db.Uuid
   createdAt   DateTime @default(now()) @db.Timestamptz(3)

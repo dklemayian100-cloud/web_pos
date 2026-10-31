@@ -1,4 +1,12 @@
+
 import { z } from "zod";
+
+const positiveMoneySchema = z
+  .string()
+  .regex(
+    /^(?:0\.(?:0[1-9]|[1-9]\d?)|[1-9]\d*(?:\.\d{1,2})?)$/,
+    "Amount must be a positive monetary value with at most 2 decimal places",
+  );
 
 export const createProductSchema = z.object({
   sku: z
@@ -19,12 +27,9 @@ export const createProductSchema = z.object({
     .max(2000, "Description must contain at most 2000 characters")
     .optional(),
 
-  price: z
-    .string()
-    .regex(
-      /^(?:0\.(?:0[1-9]|[1-9]\d)|[1-9]\d*(?:\.\d{1,2})?)$/,
-      "Price must be a positive monetary value with at most 2 decimal places",
-    ),
+  price: positiveMoneySchema,
+
+  costPrice: positiveMoneySchema,
 
   categoryId: z
     .uuid("Category ID must be a valid UUID")
@@ -54,13 +59,9 @@ export const updateProductSchema = z
       .nullable()
       .optional(),
 
-    price: z
-      .string()
-      .regex(
-        /^(?:0\.(?:0[1-9]|[1-9]\d)|[1-9]\d*(?:\.\d{1,2})?)$/,
-        "Price must be a positive monetary value with at most 2 decimal places",
-      )
-      .optional(),
+    price: positiveMoneySchema.optional(),
+
+    costPrice: positiveMoneySchema.optional(),
 
     categoryId: z
       .uuid("Category ID must be a valid UUID")
@@ -74,6 +75,6 @@ export const updateProductSchema = z
     message: "At least one field must be provided",
   });
 
-export type UpdateProductInput = z.infer<typeof updateProductSchema>;
-
 export type CreateProductInput = z.infer<typeof createProductSchema>;
+
+export type UpdateProductInput = z.infer<typeof updateProductSchema>;
