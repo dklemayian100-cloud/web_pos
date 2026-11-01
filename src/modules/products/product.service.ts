@@ -1,3 +1,4 @@
+
 import { Prisma } from "../../generated/prisma/client.js";
 
 import { ApplicationError } from "../../app/application-error.js";
@@ -54,6 +55,7 @@ export async function createProduct(input: CreateProductInput) {
         name: input.name,
         description: input.description ?? null,
         price: input.price,
+        costPrice: input.costPrice,
         ...(input.categoryId
           ? {
               category: {
@@ -70,6 +72,7 @@ export async function createProduct(input: CreateProductInput) {
         name: true,
         description: true,
         price: true,
+        costPrice: true,
         isActive: true,
         categoryId: true,
         createdAt: true,
@@ -107,6 +110,9 @@ export async function updateProduct(
           ? { description: input.description }
           : {}),
         ...(input.price !== undefined ? { price: input.price } : {}),
+        ...(input.costPrice !== undefined
+          ? { costPrice: input.costPrice }
+          : {}),
         ...(input.categoryId !== undefined
           ? { categoryId: input.categoryId }
           : {}),
@@ -120,6 +126,7 @@ export async function updateProduct(
         name: true,
         description: true,
         price: true,
+        costPrice: true,
         isActive: true,
         categoryId: true,
         createdAt: true,

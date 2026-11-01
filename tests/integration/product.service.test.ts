@@ -1,3 +1,4 @@
+
 import {
   afterAll,
   beforeAll,
@@ -51,12 +52,13 @@ describe("Product service", () => {
     await prisma.$disconnect();
   });
 
-  it("creates a product with a category", async () => {
+  it("creates a product with a category and cost price", async () => {
     const product = await createProduct({
       sku: `TEST-${Date.now()}-1`,
       name: "Test Product",
       description: "Product service integration test",
       price: "125.50",
+      costPrice: "80.00",
       categoryId,
     });
 
@@ -68,6 +70,7 @@ describe("Product service", () => {
       "Product service integration test",
     );
     expect(product.price.toFixed(2)).toBe("125.50");
+    expect(product.costPrice?.toFixed(2)).toBe("80.00");
     expect(product.isActive).toBe(true);
     expect(product.categoryId).toBe(categoryId);
   });
@@ -77,12 +80,14 @@ describe("Product service", () => {
       sku: `TEST-${Date.now()}-2`,
       name: "Product Without Optional Fields",
       price: "50.00",
+      costPrice: "30.00",
     });
 
     productIds.push(product.id);
 
     expect(product.description).toBeNull();
     expect(product.categoryId).toBeNull();
+    expect(product.costPrice?.toFixed(2)).toBe("30.00");
   });
 
   it("rejects a duplicate SKU", async () => {
@@ -92,6 +97,7 @@ describe("Product service", () => {
       sku,
       name: "First Product",
       price: "100.00",
+      costPrice: "60.00",
     });
 
     productIds.push(firstProduct.id);
@@ -101,6 +107,7 @@ describe("Product service", () => {
         sku,
         name: "Second Product",
         price: "200.00",
+        costPrice: "120.00",
       }),
     ).rejects.toBeInstanceOf(ProductSkuAlreadyExistsError);
   });
@@ -110,12 +117,14 @@ describe("Product service", () => {
       sku: `TEST-LIST-${Date.now()}-1`,
       name: "Zebra Product",
       price: "20.00",
+      costPrice: "12.00",
     });
 
     const secondProduct = await createProduct({
       sku: `TEST-LIST-${Date.now()}-2`,
       name: "Apple Product",
       price: "10.00",
+      costPrice: "6.00",
     });
 
     productIds.push(firstProduct.id, secondProduct.id);
@@ -132,6 +141,11 @@ describe("Product service", () => {
       "Apple Product",
       "Zebra Product",
     ]);
+
+    // General product listings must not expose cost prices.
+    expect(testProducts.every(
+      (product) => !("costPrice" in product),
+    )).toBe(true);
   });
 
   it("lists products with pagination and search", async () => {
@@ -139,18 +153,21 @@ describe("Product service", () => {
       sku: `TEST-PAGE-${Date.now()}-1`,
       name: "Pagination Apple Product",
       price: "10.00",
+      costPrice: "6.00",
     });
 
     const bananaProduct = await createProduct({
       sku: `TEST-PAGE-${Date.now()}-2`,
       name: "Pagination Banana Product",
       price: "20.00",
+      costPrice: "12.00",
     });
 
     const orangeProduct = await createProduct({
       sku: `TEST-PAGE-${Date.now()}-3`,
       name: "Pagination Orange Product",
       price: "30.00",
+      costPrice: "18.00",
     });
 
     productIds.push(
@@ -182,6 +199,10 @@ describe("Product service", () => {
       total: 3,
       totalPages: 2,
     });
+
+    expect(result.products.every(
+      (product) => !("costPrice" in product),
+    )).toBe(true);
   });
 
   it("rejects a nonexistent category", async () => {
@@ -190,6 +211,7 @@ describe("Product service", () => {
         sku: `TEST-NO-CATEGORY-${Date.now()}`,
         name: "Invalid Category Product",
         price: "75.00",
+        costPrice: "45.00",
         categoryId: "00000000-0000-0000-0000-000000000000",
       }),
     ).rejects.toBeInstanceOf(ProductCategoryNotFoundError);
