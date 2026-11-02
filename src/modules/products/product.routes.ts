@@ -1,91 +1,78 @@
-import type { FastifyInstance } from "fastify";
 
-import { requireAuthentication } from "../auth/auth.guard.js";
-import { requireRole } from "../auth/role.guard.js";
+export async function listProductsForManagement(
+  input: ListProductsInput,
+) {
+  const {
+    page,
+    pageSize,
+    search,
+    isActive,
+    categoryId,
+    sortBy,
+    sortOrder,
+  } = input;
 
-import {
-  createProductSchema,
-  updateProductSchema,
-} from "./product.schema.js";
+  const where = {
+    ...(search
+      ? {
+          OR: [
+            {
+              name: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              sku: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
+            },
+          ],
+        }
+      : {}),
+    ...(isActive !== undefined ? { isActive } : {}),
+    ...(categoryId ? { categoryId } : {}),
+  };
 
-import { listProductsSchema } from "./product-list.schema.js";
+  const [products, total] = await prisma.$transaction([
+    prisma.product.findMany({
+      where,
+      orderBy: [
+        {
+          [sortBy]: sortOrder,
+        },
+        {
+          id: "asc",
+        },
+      ],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      select: {
+        id: true,
+        sku: true,
+        name: true,
+        description: true,
+        price: true,
+        costPrice: true,
+        isActive: true,
+        categoryId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.product.count({
+      where,
+    }),
+  ]);
 
-import {
-  createProduct,
-  listProductsPaginated,
-  updateProduct,
-} from "./product.service.js";
-
-export async function productRoutes(app: FastifyInstance) {
-  app.get(
-    "/products",
-    {
-      onRequest: requireAuthentication,
+  return {
+    products,
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize),
     },
-    async (request, reply) => {
-      const result = listProductsSchema.safeParse(request.query);
-
-      if (!result.success) {
-        return reply.status(400).send({
-          error: "VALIDATION_ERROR",
-          message: "Invalid product listing parameters.",
-          details: result.error.flatten(),
-        });
-      }
-
-      const products = await listProductsPaginated(result.data);
-
-      return reply.send(products);
-    },
-  );
-
-  app.post(
-    "/products",
-    {
-      onRequest: requireRole("ADMIN"),
-    },
-    async (request, reply) => {
-      const result = createProductSchema.safeParse(request.body);
-
-      if (!result.success) {
-        return reply.status(400).send({
-          error: "VALIDATION_ERROR",
-          message: "Invalid product data.",
-          details: result.error.flatten(),
-        });
-      }
-
-      const product = await createProduct(result.data);
-
-      return reply.status(201).send({
-        product,
-      });
-    },
-  );
-
-  app.patch(
-    "/products/:id",
-    {
-      onRequest: requireRole("ADMIN"),
-    },
-    async (request, reply) => {
-      const params = request.params as { id: string };
-
-      const result = updateProductSchema.safeParse(request.body);
-
-      if (!result.success) {
-        return reply.status(400).send({
-          error: "VALIDATION_ERROR",
-          message: "Invalid product data.",
-          details: result.error.flatten(),
-        });
-      }
-
-      const product = await updateProduct(params.id, result.data);
-
-      return reply.send({
-        product,
-      });
-    },
-  );
+  };
 }
