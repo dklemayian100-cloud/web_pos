@@ -1,78 +1,120 @@
+import type { FastifyInstance } from "fastify";
 
-export async function listProductsForManagement(
-  input: ListProductsInput,
-) {
-  const {
-    page,
-    pageSize,
-    search,
-    isActive,
-    categoryId,
-    sortBy,
-    sortOrder,
-  } = input;
+import { requireAuthentication } from "../auth/auth.guard.js";
+import { requireRole } from "../auth/role.guard.js";
 
-  const where = {
-    ...(search
-      ? {
-          OR: [
-            {
-              name: {
-                contains: search,
-                mode: "insensitive" as const,
-              },
-            },
-            {
-              sku: {
-                contains: search,
-                mode: "insensitive" as const,
-              },
-            },
-          ],
-        }
-      : {}),
-    ...(isActive !== undefined ? { isActive } : {}),
-    ...(categoryId ? { categoryId } : {}),
-  };
+import {
+  createProductSchema,
+  updateProductSchema,
+} from "./product.schema.js";
 
-  const [products, total] = await prisma.$transaction([
-    prisma.product.findMany({
-      where,
-      orderBy: [
-        {
-          [sortBy]: sortOrder,
-        },
-        {
-          id: "asc",
-        },
-      ],
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      select: {
-        id: true,
-        sku: true,
-        name: true,
-        description: true,
-        price: true,
-        costPrice: true,
-        isActive: true,
-        categoryId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    }),
-    prisma.product.count({
-      where,
-    }),
-  ]);
+import { listProductsSchema } from "./product-list.schema.js";
 
-  return {
-    products,
-    pagination: {
-      page,
-      pageSize,
-      total,
-      totalPages: Math.ceil(total / pageSize),
+import {
+  createProduct,
+  listProductsForManagement,
+  listProductsPaginated,
+  updateProduct,
+} from "./product.service.js";
+
+export async function productRoutes(app: FastifyInstance) {
+  // General product listing: authenticated users.
+  // Cost price is deliberately excluded by the service.
+  app.get(
+    "/products",
+    {
+      onRequest: requireAuthentication,
     },
-  };
+    async (request, reply) => {
+      const result = listProductsSchema.safeParse(request.query);
+
+      if (!result.success) {
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Invalid product listing parameters.",
+          details: result.error.flatten(),
+        });
+      }
+
+      const products = await listProductsPaginated(result.data);
+
+      return reply.send(products);
+    },
+  );
+
+  // Product management listing: ADMIN only.
+  // Includes cost price for management purposes.
+  app.get(
+    "/products/manage",
+    {
+      onRequest: requireRole("ADMIN"),
+    },
+    async (request, reply) => {
+      const result = listProductsSchema.safeParse(request.query);
+
+      if (!result.success) {
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Invalid product listing parameters.",
+          details: result.error.flatten(),
+        });
+      }
+
+      const products = await listProductsForManagement(result.data);
+
+      return reply.send(products);
+    },
+  );
+
+  // Product creation: ADMIN only.
+  app.post(
+    "/products",
+    {
+      onRequest: requireRole("ADMIN"),
+    },
+    async (request, reply) => {
+      const result = createProductSchema.safeParse(request.body);
+
+      if (!result.success) {
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Invalid product data.",
+          details: result.error.flatten(),
+        });
+      }
+
+      const product = await createProduct(result.data);
+
+      return reply.status(201).send({
+        product,
+      });
+    },
+  );
+
+  // Product update: ADMIN only.
+  app.patch(
+    "/products/:id",
+    {
+      onRequest: requireRole("ADMIN"),
+    },
+    async (request, reply) => {
+      const params = request.params as { id: string };
+
+      const result = updateProductSchema.safeParse(request.body);
+
+      if (!result.success) {
+        return reply.status(400).send({
+          error: "VALIDATION_ERROR",
+          message: "Invalid product data.",
+          details: result.error.flatten(),
+        });
+      }
+
+      const product = await updateProduct(params.id, result.data);
+
+      return reply.send({
+        product,
+      });
+    },
+  );
 }
