@@ -1,0 +1,148 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Manage products and pricing">
+  <title>Products | Web POS</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/js/products.js" defer></script>
+</head>
+<body class="dashboard-page">
+  <header class="topbar">
+    <a class="brand" href="/dashboard.html">
+      <span class="brand-mark">P</span>
+      <span>Web POS</span>
+    </a>
+
+    <div class="user-area">
+      <div>
+        <strong id="user-email">Loading account...</strong>
+        <span id="user-role" class="muted">Verifying access</span>
+      </div>
+      <button id="logout-button" class="button-secondary" type="button">
+        Sign out
+      </button>
+    </div>
+  </header>
+
+  <main class="dashboard-content">
+    <section class="welcome-section">
+      <p class="eyebrow">CATALOGUE MANAGEMENT</p>
+      <h1>Products</h1>
+      <p class="muted">Manage your store's products, pricing and availability.</p>
+      <p><a href="/dashboard.html">← Back to dashboard</a></p>
+    </section>
+
+    <p id="products-error" class="error" role="alert" hidden></p>
+    <p id="products-success" role="status" hidden></p>
+
+    <section id="product-management" hidden>
+      <section class="status-card">
+        <div>
+          <h2>Product catalogue</h2>
+          <p class="muted">Search, review and manage your products.</p>
+        </div>
+        <button id="add-product-button" type="button">Add product</button>
+      </section>
+
+      <section class="module-card">
+        <form id="product-search-form">
+          <label for="product-search">Search products</label>
+          <input
+            id="product-search"
+            type="search"
+            placeholder="Search by product name or SKU"
+          >
+
+          <label for="product-status">Status</label>
+          <select id="product-status">
+            <option value="">All products</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+
+          <button type="submit">Search</button>
+        </form>
+      </section>
+
+      <section class="module-card" aria-labelledby="products-heading">
+        <h2 id="products-heading">Product list</h2>
+        <p id="products-loading" class="muted">Loading products...</p>
+
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Product</th>
+                <th>Selling price</th>
+                <th>Cost price</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="products-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination-controls">
+          <button id="previous-page" class="button-secondary" type="button">
+            Previous
+          </button>
+          <span id="pagination-info" class="muted">Page 1</span>
+          <button id="next-page" class="button-secondary" type="button">
+            Next
+          </button>
+        </div>
+      </section>
+
+      <section id="product-form-section" class="module-card" hidden>
+        <h2 id="product-form-heading">Add product</h2>
+
+        <form id="product-form">
+          <input id="product-id" type="hidden">
+
+          <label for="product-sku">SKU</label>
+          <input id="product-sku" type="text" maxlength="100" required>
+
+          <label for="product-name">Product name</label>
+          <input id="product-name" type="text" maxlength="200" required>
+
+          <label for="product-description">Description</label>
+          <textarea id="product-description" maxlength="2000"></textarea>
+
+          <label for="product-price">Selling price</label>
+          <input id="product-price" type="number" min="0.01" step="0.01" required>
+
+          <label for="product-cost-price">Cost price</label>
+          <input id="product-cost-price" type="number" min="0.01" step="0.01" required>
+
+          <label for="product-active">Product status</label>
+          <select id="product-active">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+
+          <button id="save-product-button" type="submit">Save product</button>
+          <button id="cancel-product-button" class="button-secondary" type="button">
+            Cancel
+          </button>
+        </form>
+      </section>
+    </section>
+
+    <section id="access-denied" class="module-card" hidden>
+      <h2>Administrator access required</h2>
+      <p class="muted">
+        Product management and cost-price information are restricted to administrators.
+      </p>
+    </section>
+
+    <footer class="dashboard-footer">
+      Web POS · Product management
+    </footer>
+  </main>
+</body>
+</html>
