@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 const positiveMoneySchema = z
@@ -25,14 +24,16 @@ export const createProductSchema = z.object({
     .string()
     .trim()
     .max(2000, "Description must contain at most 2000 characters")
+    .nullable()
     .optional(),
 
   price: positiveMoneySchema,
 
-  costPrice: positiveMoneySchema,
+  costPrice: positiveMoneySchema.nullable().optional(),   // ← was required
 
   categoryId: z
     .uuid("Category ID must be a valid UUID")
+    .nullable()                                          // ← added
     .optional(),
 });
 
@@ -61,7 +62,7 @@ export const updateProductSchema = z
 
     price: positiveMoneySchema.optional(),
 
-    costPrice: positiveMoneySchema.optional(),
+    costPrice: positiveMoneySchema.nullable().optional(),   // ← added nullable
 
     categoryId: z
       .uuid("Category ID must be a valid UUID")

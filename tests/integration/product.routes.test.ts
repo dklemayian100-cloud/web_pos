@@ -168,7 +168,7 @@ describe("Product routes", () => {
     });
 
     expect(body.product.id).toEqual(expect.any(String));
-    expect(body.product.price).toBe("150");
+    expect(Number(body.product.price)).toBe(150);
   });
 
   it("rejects product creation when the SKU already exists", async () => {
@@ -369,6 +369,7 @@ describe("Product routes", () => {
           sku: `${searchTerm}-1`,
           name: `${searchTerm} Apple`,
           price: "10.00",
+          costPrice: "8.00",
         },
         {
           sku: `${searchTerm}-2`,
