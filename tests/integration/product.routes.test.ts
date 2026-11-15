@@ -130,6 +130,7 @@ describe("Product routes", () => {
         sku: `${testPrefix}STAFF`,
         name: "Staff Created Product",
         price: "100.00",
+        costPrice: "60.00",
       },
     });
 
@@ -152,6 +153,7 @@ describe("Product routes", () => {
         sku: `${testPrefix}ADMIN`,
         name: "Admin Created Product",
         price: "150.00",
+        costPrice: "80.00",
       },
     });
 
@@ -169,6 +171,7 @@ describe("Product routes", () => {
 
     expect(body.product.id).toEqual(expect.any(String));
     expect(Number(body.product.price)).toBe(150);
+    expect(Number(body.product.costPrice)).toBe(80);
   });
 
   it("rejects product creation when the SKU already exists", async () => {
@@ -184,6 +187,7 @@ describe("Product routes", () => {
         sku,
         name: "First Product",
         price: "100.00",
+        costPrice: "60.00",
       },
     });
 
@@ -199,6 +203,7 @@ describe("Product routes", () => {
         sku,
         name: "Duplicate Product",
         price: "200.00",
+        costPrice: "120.00",
       },
     });
 
@@ -221,6 +226,7 @@ describe("Product routes", () => {
         sku: `${testPrefix}INVALID-CATEGORY`,
         name: "Product With Invalid Category",
         price: "100.00",
+        costPrice: "60.00",
         categoryId: "00000000-0000-4000-8000-000000000000",
       },
     });
@@ -244,6 +250,7 @@ describe("Product routes", () => {
         sku: "",
         name: "",
         price: "invalid",
+        costPrice: "60.00",
       },
     });
 
@@ -266,6 +273,7 @@ describe("Product routes", () => {
         sku: `${testPrefix}ZERO-PRICE`,
         name: "Zero Price Product",
         price: "0",
+        costPrice: "60.00",
       },
     });
 
@@ -288,6 +296,7 @@ describe("Product routes", () => {
         sku: `${testPrefix}ZERO-PRICE-DECIMAL`,
         name: "Zero Price Decimal Product",
         price: "0.00",
+        costPrice: "60.00",
       },
     });
 
@@ -310,6 +319,7 @@ describe("Product routes", () => {
         sku: `${testPrefix}THREE-DECIMALS`,
         name: "Three Decimal Product",
         price: "100.001",
+        costPrice: "60.00",
       },
     });
 
@@ -332,6 +342,7 @@ describe("Product routes", () => {
         sku: `${testPrefix}NEGATIVE-PRICE`,
         name: "Negative Price Product",
         price: "-10.00",
+        costPrice: "60.00",
       },
     });
 
