@@ -55,7 +55,9 @@ export async function createProduct(input: CreateProductInput) {
         name: input.name,
         description: input.description ?? null,
         price: input.price,
-        costPrice: input.costPrice,
+        ...(input.costPrice !== undefined
+          ? { costPrice: input.costPrice }
+          : {}),
         ...(input.categoryId
           ? {
               category: {
