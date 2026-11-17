@@ -12,6 +12,8 @@ import { listProductsSchema } from "./product-list.schema.js";
 
 import {
   createProduct,
+  getProductById,
+  getProductForManagementById,
   listProductsForManagement,
   listProductsPaginated,
   updateProduct,
@@ -63,6 +65,27 @@ export async function productRoutes(app: FastifyInstance) {
       const products = await listProductsForManagement(result.data);
 
       return reply.send(products);
+    },
+  );
+
+  // Product details: authenticated users.
+  // STAFF receive operational fields; ADMIN also receives cost price.
+  app.get(
+    "/products/:id",
+    {
+      onRequest: requireAuthentication,
+    },
+    async (request, reply) => {
+      const params = request.params as { id: string };
+
+      const product =
+        request.user.role === "ADMIN"
+          ? await getProductForManagementById(params.id)
+          : await getProductById(params.id);
+
+      return reply.send({
+        product,
+      });
     },
   );
 

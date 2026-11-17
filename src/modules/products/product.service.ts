@@ -1,4 +1,3 @@
-
 import { Prisma } from "../../generated/prisma/client.js";
 
 import { ApplicationError } from "../../app/application-error.js";
@@ -94,6 +93,59 @@ export async function createProduct(input: CreateProductInput) {
 
     throw error;
   }
+}
+
+// General product details: deliberately excludes cost price.
+export async function getProductById(id: string) {
+  const product = await prisma.product.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      sku: true,
+      name: true,
+      description: true,
+      price: true,
+      isActive: true,
+      categoryId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!product) {
+    throw new ProductNotFoundError();
+  }
+
+  return product;
+}
+
+// ADMIN product details: includes cost price for management purposes.
+export async function getProductForManagementById(id: string) {
+  const product = await prisma.product.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      sku: true,
+      name: true,
+      description: true,
+      price: true,
+      costPrice: true,
+      isActive: true,
+      categoryId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!product) {
+    throw new ProductNotFoundError();
+  }
+
+  return product;
 }
 
 export async function updateProduct(
@@ -249,6 +301,7 @@ export async function listProductsPaginated(
     },
   };
 }
+
 export async function listProductsForManagement(
   input: ListProductsInput,
 ) {
