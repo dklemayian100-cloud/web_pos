@@ -608,6 +608,119 @@ describe("Product routes", () => {
     }
   });
 
+  it("allows STAFF to retrieve product details without cost price", async () => {
+    const product = await prisma.product.create({
+      data: {
+        sku: `${testPrefix}DETAIL-STAFF`,
+        name: "Staff Product Details",
+        price: "100.00",
+        costPrice: "60.00",
+      },
+    });
+
+    try {
+      const response = await app.inject({
+        method: "GET",
+        url: `/products/${product.id}`,
+        headers: {
+          authorization: `Bearer ${staffToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      const body = response.json();
+
+      expect(body.product).toMatchObject({
+        id: product.id,
+        sku: `${testPrefix}DETAIL-STAFF`,
+        name: "Staff Product Details",
+        price: "100",
+      });
+      expect(body.product).not.toHaveProperty("costPrice");
+    } finally {
+      await prisma.product.delete({
+        where: { id: product.id },
+      });
+    }
+  });
+
+  it("allows ADMIN to retrieve product details including cost price", async () => {
+    const product = await prisma.product.create({
+      data: {
+        sku: `${testPrefix}DETAIL-ADMIN`,
+        name: "Admin Product Details",
+        price: "100.00",
+        costPrice: "60.00",
+      },
+    });
+
+    try {
+      const response = await app.inject({
+        method: "GET",
+        url: `/products/${product.id}`,
+        headers: {
+          authorization: `Bearer ${adminToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      expect(response.json().product).toMatchObject({
+        id: product.id,
+        sku: `${testPrefix}DETAIL-ADMIN`,
+        name: "Admin Product Details",
+        price: "100",
+        costPrice: "60",
+      });
+    } finally {
+      await prisma.product.delete({
+        where: { id: product.id },
+      });
+    }
+  });
+
+  it("rejects unauthenticated product detail requests", async () => {
+    const product = await prisma.product.create({
+      data: {
+        sku: `${testPrefix}DETAIL-UNAUTH`,
+        name: "Unauthenticated Product Details",
+        price: "100.00",
+      },
+    });
+
+    try {
+      const response = await app.inject({
+        method: "GET",
+        url: `/products/${product.id}`,
+      });
+
+      expect(response.statusCode).toBe(401);
+    } finally {
+      await prisma.product.delete({
+        where: { id: product.id },
+      });
+    }
+  });
+
+  it("returns 404 when retrieving a nonexistent product", async () => {
+    const nonexistentProductId = "00000000-0000-4000-8000-000000000000";
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/products/${nonexistentProductId}`,
+      headers: {
+        authorization: `Bearer ${staffToken}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toEqual({
+      error: "PRODUCT_NOT_FOUND",
+      message: "The specified product does not exist.",
+    });
+  });
+
   it("allows ADMIN to update an existing product", async () => {
   const sku = `${testPrefix}UPDATE`;
 
